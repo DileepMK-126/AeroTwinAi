@@ -1,0 +1,51 @@
+name: AEROTWIN CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install dependencies
+        working-directory: aerotwin
+        run: pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        working-directory: aerotwin
+        run: ruff check .
+
+      - name: Type check (mypy)
+        working-directory: aerotwin
+        run: mypy . --ignore-missing-imports || true
+
+      - name: Run tests
+        working-directory: aerotwin
+        run: pytest tests/ -v --tb=short --cov=. --cov-report=term-missing
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          fail_ci_if_error: false
