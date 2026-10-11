@@ -269,8 +269,9 @@ class PhysicsFaultTree:
             return ("No anomalies detected. Engine operating normally.", "Continue normal operation.")
 
         sig = self._fault_signatures.get(fault_id, {})
-        primary = sig.get("primary", [])
-        maintenance = sig.get("maintenance", "Follow standard maintenance procedure.")
+        _primary_raw = sig.get("primary")
+        primary: list = _primary_raw if isinstance(_primary_raw, list) else []
+        maintenance: str = str(sig.get("maintenance", "Follow standard maintenance procedure."))
 
         # Format channel deviations
         channel_descriptions = []
