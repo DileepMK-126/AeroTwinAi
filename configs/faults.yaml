@@ -1,0 +1,442 @@
+# ============================================================
+# AEROTWIN — Fault Library Configuration
+# Each fault specifies: id, category, description, onset_type,
+# affected health parameters and their final severity multipliers,
+# expected sensor signatures, and recommended maintenance action.
+# ============================================================
+
+# Severity ramp types: abrupt | linear | exponential | intermittent
+# Severity: 0.0 = healthy, 1.0 = fully failed
+
+faults:
+  # ============================================================
+  # COMBUSTION FAULTS
+  # ============================================================
+
+  spark_plug_degradation:
+    id: "spark_plug_degradation"
+    category: "combustion"
+    description: "Spark plug fouling or gap wear, reducing ignition energy"
+    cylinder_specific: true          # applies per cylinder (cyl_index param)
+    onset_types: [linear, exponential]
+    default_onset: linear
+    # Health parameter changes at severity=1.0
+    health_params:
+      hp_combustion_eff_per_cyl: 0.65  # 35% combustion efficiency loss
+    # Expected sensor signatures at severity=1.0 (for fault tree)
+    signatures:
+      egt_c_affected_cyl_delta_c: +80   # EGT rise in affected cylinder
+      cht_c_affected_cyl_delta_c: +20
+      rpm_delta_pct: -3
+      fuel_flow_lph_delta_pct: +5       # richer mix compensation
+    recommended_action: "Replace spark plug(s) in cylinder(s) {cyl_index}"
+    severity_to_failure_h: 50.0         # hours from onset severity 0.1 to failure
+
+  injector_clogging:
+    id: "injector_clogging"
+    category: "combustion"
+    description: "Fuel injector partial blockage reducing fuel delivery"
+    cylinder_specific: true
+    onset_types: [linear, exponential]
+    default_onset: linear
+    health_params:
+      hp_injector_flow: 0.60           # 40% flow reduction
+      hp_combustion_eff_per_cyl: 0.80  # lean misfire at high severity
+    signatures:
+      egt_c_affected_cyl_delta_c: -30  # lean → lower EGT early, then misfire
+      fuel_flow_lph_delta_pct: -15
+      rpm_delta_pct: -2
+    recommended_action: "Clean or replace injector in cylinder {cyl_index}"
+    severity_to_failure_h: 80.0
+
+  lean_drift:
+    id: "lean_drift"
+    category: "combustion"
+    description: "Air-fuel ratio drifts lean (fuel delivery issue or air leak)"
+    cylinder_specific: false
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_injector_flow: 0.80           # lean bias
+    signatures:
+      egt_c_all_delta_c: +40
+      fuel_flow_lph_delta_pct: -10
+      rpm_delta_pct: -2
+    recommended_action: "Check fuel pump, injectors, and intake for air leaks"
+    severity_to_failure_h: 100.0
+
+  rich_drift:
+    id: "rich_drift"
+    category: "combustion"
+    description: "Air-fuel ratio drifts rich (injector stuck open or regulator fault)"
+    cylinder_specific: false
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_injector_flow: 1.25           # 25% over-fuelling
+    signatures:
+      egt_c_all_delta_c: -20
+      fuel_flow_lph_delta_pct: +20
+      rpm_delta_pct: -1
+    recommended_action: "Check fuel pressure regulator and injectors"
+    severity_to_failure_h: 200.0
+
+  intake_leak:
+    id: "intake_leak"
+    category: "combustion"
+    description: "Unmetered air entering via cracked intake manifold"
+    cylinder_specific: false
+    onset_types: [abrupt, linear]
+    default_onset: abrupt
+    health_params:
+      hp_ve_factor: 0.85              # VE reduction from false air
+      hp_injector_flow: 0.90          # lean
+    signatures:
+      map_kpa_delta: -8
+      egt_c_all_delta_c: +25
+      fuel_flow_lph_delta_pct: -8
+    recommended_action: "Inspect and replace intake manifold gaskets and hoses"
+    severity_to_failure_h: 200.0
+
+  detonation_tendency:
+    id: "detonation_tendency"
+    category: "combustion"
+    description: "Pre-ignition or knock causing heat spikes and power loss"
+    cylinder_specific: true
+    onset_types: [intermittent, abrupt]
+    default_onset: intermittent
+    health_params:
+      hp_combustion_eff_per_cyl: 0.75
+    signatures:
+      cht_c_affected_cyl_delta_c: +35
+      egt_c_affected_cyl_delta_c: +30
+      vib_rms_g_delta: +0.02
+    recommended_action: "Check fuel octane rating, ignition timing, and CHT cooling"
+    severity_to_failure_h: 10.0       # fast — detonation causes rapid damage
+
+  exhaust_leak:
+    id: "exhaust_leak"
+    category: "combustion"
+    description: "Exhaust manifold crack or gasket failure"
+    cylinder_specific: true
+    onset_types: [abrupt, linear]
+    default_onset: abrupt
+    health_params:
+      hp_ve_factor: 0.92              # slight backpressure reduction
+    signatures:
+      egt_c_affected_cyl_delta_c: -30  # heat escapes before sensor
+      map_kpa_delta: +3
+    recommended_action: "Replace exhaust gasket or repair manifold at cylinder {cyl_index}"
+    severity_to_failure_h: 500.0
+
+  # ============================================================
+  # MECHANICAL FAULTS
+  # ============================================================
+
+  bearing_wear:
+    id: "bearing_wear"
+    category: "mechanical"
+    description: "Main or rod bearing wear increasing friction and vibration"
+    cylinder_specific: false
+    onset_types: [linear, exponential]
+    default_onset: linear
+    health_params:
+      hp_friction_factor: 1.50        # 50% friction increase at max
+      hp_ve_factor: 0.95              # slight VE reduction from blowby
+    signatures:
+      oil_press_kpa_delta: -30
+      oil_temp_c_delta: +15
+      vib_rms_g_delta: +0.15         # primary signature
+      rpm_delta_pct: -4
+      brake_power_delta_pct: -10
+    recommended_action: "Inspect and replace main/rod bearings. Check oil quality."
+    severity_to_failure_h: 200.0
+
+  piston_ring_wear:
+    id: "piston_ring_wear"
+    category: "mechanical"
+    description: "Piston ring wear causing blow-by and power loss"
+    cylinder_specific: true
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_ve_factor: 0.82              # blow-by reduces effective compression
+      hp_combustion_eff_per_cyl: 0.85
+    signatures:
+      brake_power_delta_pct: -12
+      egt_c_affected_cyl_delta_c: +20  # burned oil in exhaust
+      fuel_flow_lph_delta_pct: +5      # richer compensation
+    recommended_action: "Replace piston rings in cylinder {cyl_index}. Check bore."
+    severity_to_failure_h: 300.0
+
+  valve_train_degradation:
+    id: "valve_train_degradation"
+    category: "mechanical"
+    description: "Valve clearance change or camshaft wear"
+    cylinder_specific: true
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_ve_factor: 0.88
+      hp_combustion_eff_per_cyl: 0.88
+    signatures:
+      brake_power_delta_pct: -8
+      vib_rms_g_delta: +0.05
+      egt_c_affected_cyl_delta_c: +15
+    recommended_action: "Inspect valve clearances and camshaft. Adjust or replace."
+    severity_to_failure_h: 400.0
+
+  propeller_imbalance:
+    id: "propeller_imbalance"
+    category: "mechanical"
+    description: "Propeller blade damage or ice causing rotational imbalance"
+    cylinder_specific: false
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params:
+      hp_friction_factor: 1.10       # increased bearing load
+    signatures:
+      vib_rms_g_delta: +0.20         # dominant signature — 1× RPM vibration
+      rpm_delta_pct: -2
+    recommended_action: "Inspect propeller for damage. Balance or replace."
+    severity_to_failure_h: 5.0       # structural risk — very fast
+
+  # ============================================================
+  # THERMAL / LUBRICATION FAULTS
+  # ============================================================
+
+  coolant_loss:
+    id: "coolant_loss"
+    category: "thermal_lubrication"
+    description: "Coolant leak causing reduced cooling effectiveness"
+    cylinder_specific: false
+    onset_types: [linear, exponential]
+    default_onset: linear
+    health_params:
+      hp_cooling_effectiveness: 0.30  # severe cooling loss
+    signatures:
+      cht_c_all_delta_c: +40
+      coolant_temp_c_delta: +30
+    recommended_action: "Immediate engine shutdown if CHT > 150°C. Inspect coolant system."
+    severity_to_failure_h: 0.5       # very rapid failure mode
+
+  thermostat_stuck_open:
+    id: "thermostat_stuck_open"
+    category: "thermal_lubrication"
+    description: "Thermostat stuck open → overcooling, slow warmup"
+    cylinder_specific: false
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params:
+      hp_cooling_effectiveness: 1.50  # over-cooling
+    signatures:
+      coolant_temp_c_delta: -20
+      cht_c_all_delta_c: -15
+      oil_temp_c_delta: -10
+      fuel_flow_lph_delta_pct: +3     # cold mixture enrichment
+    recommended_action: "Replace thermostat."
+    severity_to_failure_h: 1000.0    # not immediately dangerous
+
+  oil_starvation:
+    id: "oil_starvation"
+    category: "thermal_lubrication"
+    description: "Oil level critically low or pump failure"
+    cylinder_specific: false
+    onset_types: [abrupt, exponential]
+    default_onset: exponential
+    health_params:
+      hp_friction_factor: 2.50        # dramatic friction increase
+    signatures:
+      oil_press_kpa_delta: -200       # major pressure drop
+      oil_temp_c_delta: +40
+      vib_rms_g_delta: +0.30
+    recommended_action: "IMMEDIATE: Reduce power. Land as soon as possible. Engine failure imminent."
+    severity_to_failure_h: 0.25      # catastrophic failure very fast
+
+  oil_cooler_fouling:
+    id: "oil_cooler_fouling"
+    category: "thermal_lubrication"
+    description: "Oil cooler passages fouled, reducing oil cooling"
+    cylinder_specific: false
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_cooling_effectiveness: 0.80   # oil side cooling reduced
+    signatures:
+      oil_temp_c_delta: +25
+      oil_press_kpa_delta: -20         # viscosity change
+    recommended_action: "Flush and clean oil cooler."
+    severity_to_failure_h: 500.0
+
+  overheating:
+    id: "overheating"
+    category: "thermal_lubrication"
+    description: "General engine overheating from combined thermal faults"
+    cylinder_specific: false
+    onset_types: [linear, exponential]
+    default_onset: linear
+    health_params:
+      hp_cooling_effectiveness: 0.50
+    signatures:
+      cht_c_all_delta_c: +30
+      egt_c_all_delta_c: +20
+      oil_temp_c_delta: +20
+    recommended_action: "Reduce power immediately. Check cooling system."
+    severity_to_failure_h: 2.0
+
+  # ============================================================
+  # BOOST SYSTEM FAULTS
+  # ============================================================
+
+  turbocharger_degradation:
+    id: "turbocharger_degradation"
+    category: "boost_system"
+    description: "Turbocharger efficiency loss from blade erosion or bearing wear"
+    cylinder_specific: false
+    onset_types: [linear]
+    default_onset: linear
+    health_params:
+      hp_boost_efficiency: 0.65       # 35% boost efficiency loss
+    signatures:
+      boost_kpa_delta: -15
+      map_kpa_delta: -12
+      brake_power_delta_pct: -15
+      egt_c_all_delta_c: +20          # less boost → hotter exhaust
+    recommended_action: "Inspect turbocharger. Check for oil leaks in turbo bearing."
+    severity_to_failure_h: 150.0
+
+  wastegate_stuck:
+    id: "wastegate_stuck"
+    category: "boost_system"
+    description: "Wastegate stuck open (low boost) or closed (over-boost)"
+    cylinder_specific: false
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params:
+      hp_boost_efficiency: 0.40       # stuck open → severe boost loss
+    signatures:
+      boost_kpa_delta: -30
+      map_kpa_delta: -25
+      brake_power_delta_pct: -25
+    recommended_action: "Inspect wastegate actuator. Replace if stuck."
+    severity_to_failure_h: 500.0     # performance loss but not catastrophic
+
+  # ============================================================
+  # ELECTRICAL / AUXILIARY FAULTS
+  # ============================================================
+
+  fuel_pump_degradation:
+    id: "fuel_pump_degradation"
+    category: "electrical_auxiliary"
+    description: "Fuel pump wear causing pressure and flow reduction"
+    cylinder_specific: false
+    onset_types: [linear, exponential]
+    default_onset: linear
+    health_params:
+      hp_injector_flow: 0.70         # flow reduction
+    signatures:
+      fuel_press_kpa_delta: -40
+      fuel_flow_lph_delta_pct: -15
+      rpm_delta_pct: -3
+    recommended_action: "Replace fuel pump. Check fuel filter."
+    severity_to_failure_h: 100.0
+
+  alternator_fault:
+    id: "alternator_fault"
+    category: "electrical_auxiliary"
+    description: "Alternator failure — battery discharging"
+    cylinder_specific: false
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params: {}                  # no direct effect on engine physics
+    signatures:
+      bus_voltage_v_delta: -2.0       # voltage drop as battery drains
+    recommended_action: "Switch to battery backup. Land within battery endurance."
+    severity_to_failure_h: 2.0       # battery dependent
+
+  # ============================================================
+  # SENSOR FAULTS
+  # ============================================================
+
+  sensor_bias:
+    id: "sensor_bias"
+    category: "sensor"
+    description: "Constant offset applied to a sensor channel (calibration shift)"
+    sensor_channel: null              # specified at runtime
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params: {}                  # no engine effect — sensor only
+    signatures: {}
+    recommended_action: "Recalibrate or replace sensor on channel {sensor_channel}"
+    severity_to_failure_h: null       # not a failure mode
+
+  sensor_drift:
+    id: "sensor_drift"
+    category: "sensor"
+    description: "Gradually increasing offset on a sensor channel"
+    sensor_channel: null
+    onset_types: [linear]
+    default_onset: linear
+    health_params: {}
+    signatures: {}
+    recommended_action: "Replace sensor on channel {sensor_channel}"
+    severity_to_failure_h: null
+
+  sensor_stuck:
+    id: "sensor_stuck"
+    category: "sensor"
+    description: "Sensor frozen at a constant value"
+    sensor_channel: null
+    onset_types: [abrupt]
+    default_onset: abrupt
+    health_params: {}
+    signatures: {}
+    recommended_action: "Check sensor wiring and replace if stuck"
+    severity_to_failure_h: null
+
+  sensor_spikes:
+    id: "sensor_spikes"
+    category: "sensor"
+    description: "Intermittent large spikes on a sensor channel (EMI or loose connection)"
+    sensor_channel: null
+    onset_types: [intermittent]
+    default_onset: intermittent
+    health_params: {}
+    signatures: {}
+    recommended_action: "Check wiring, shielding, and connector on channel {sensor_channel}"
+    severity_to_failure_h: null
+
+  sensor_dropout:
+    id: "sensor_dropout"
+    category: "sensor"
+    description: "Sensor channel goes to NaN/missing periodically"
+    sensor_channel: null
+    onset_types: [intermittent]
+    default_onset: intermittent
+    health_params: {}
+    signatures: {}
+    recommended_action: "Check sensor power supply and wiring"
+    severity_to_failure_h: null
+
+  sensor_noise_burst:
+    id: "sensor_noise_burst"
+    category: "sensor"
+    description: "Sudden increase in noise standard deviation"
+    sensor_channel: null
+    onset_types: [abrupt, intermittent]
+    default_onset: abrupt
+    health_params: {}
+    signatures: {}
+    recommended_action: "Check for EMI sources near sensor wiring"
+    severity_to_failure_h: null
+
+# ============================================================
+# Fault categories for grouping
+# ============================================================
+categories:
+  - combustion
+  - mechanical
+  - thermal_lubrication
+  - boost_system
+  - electrical_auxiliary
+  - sensor

@@ -1,0 +1,104 @@
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.so
+.installed.cfg
+*.egg-link
+.venv/
+venv/
+ENV/
+env/
+.env.local
+
+# ========================
+# Sensitive / Environment
+# ========================
+.env
+*.pem
+*.key
+secrets/
+
+# ========================
+# Large Data & Zip Files
+# ========================
+*.zip
+*.tar.gz
+*.tar
+data/
+storage/
+
+# ========================
+# React Native / Node
+# ========================
+mobile/node_modules/
+mobile/.gradle/
+mobile/android/.gradle/
+mobile/android/build/
+mobile/ios/build/
+mobile/ios/Pods/
+mobile/.expo/
+mobile/dist/
+mobile/npm-debug.log
+mobile/yarn-error.log
+
+# ========================
+# ML / Model Artifacts
+# ========================
+*.pkl
+*.h5
+*.pt
+*.pth
+*.onnx
+*.joblib
+*.model
+*.bin
+*.safetensors
+improved_cmapss_models/
+trained_artifacts/
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ========================
+# Testing / Cache
+# ========================
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ========================
+# Docker
+# ========================
+docker/data/
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/

@@ -1,0 +1,152 @@
+# ============================================================
+# AEROTWIN — Sensor Models Configuration
+# Defines noise, drift, dropout, saturation per channel
+# All values [assumed] unless noted
+# ============================================================
+
+# Default sampling rate for all channels (Hz)
+default_sample_rate_hz: 10
+
+sensors:
+  rpm:
+    description: "Engine speed (magneto-based or optical encoder)"
+    unit: "RPM"
+    noise_std: 20.0          # [assumed] ±20 RPM 1-sigma Gaussian noise
+    drift_rate: 0.0          # RPM sensors typically no drift
+    dropout_prob: 0.001      # probability of dropout per sample
+    saturation_min: 0.0
+    saturation_max: 8000.0
+    quantization_step: 10.0  # 10 RPM resolution
+    lag_tau_s: 0.1           # first-order lag time constant
+
+  throttle_pct:
+    description: "Throttle position sensor (potentiometer / TPS)"
+    unit: "%"
+    noise_std: 0.5
+    drift_rate: 0.001        # %/hour drift
+    dropout_prob: 0.0005
+    saturation_min: 0.0
+    saturation_max: 100.0
+    quantization_step: 0.5
+    lag_tau_s: 0.05
+
+  map_kpa:
+    description: "Manifold Absolute Pressure (MAP sensor)"
+    unit: "kPa"
+    noise_std: 0.5
+    drift_rate: 0.005
+    dropout_prob: 0.001
+    saturation_min: 0.0
+    saturation_max: 200.0
+    quantization_step: 0.1
+    lag_tau_s: 0.1
+
+  boost_kpa:
+    description: "Turbocharger boost pressure"
+    unit: "kPa"
+    noise_std: 1.0
+    drift_rate: 0.01
+    dropout_prob: 0.001
+    saturation_min: 0.0
+    saturation_max: 200.0
+    quantization_step: 0.5
+    lag_tau_s: 0.2
+
+  fuel_flow_lph:
+    description: "Fuel flow meter (turbine or Coriolis type)"
+    unit: "L/h"
+    noise_std: 0.2
+    drift_rate: 0.01         # L/h/hour
+    dropout_prob: 0.002
+    saturation_min: 0.0
+    saturation_max: 50.0
+    quantization_step: 0.1
+    lag_tau_s: 0.5
+
+  cht_c:
+    description: "Cylinder Head Temperature (thermocouple per cylinder)"
+    unit: "°C"
+    noise_std: 2.0
+    drift_rate: 0.05         # °C/hour
+    dropout_prob: 0.002
+    saturation_min: -40.0
+    saturation_max: 300.0
+    quantization_step: 1.0
+    lag_tau_s: 5.0           # thermocouple + installation lag
+
+  egt_c:
+    description: "Exhaust Gas Temperature (thermocouple per cylinder)"
+    unit: "°C"
+    noise_std: 5.0
+    drift_rate: 0.1
+    dropout_prob: 0.003
+    saturation_min: 0.0
+    saturation_max: 1200.0
+    quantization_step: 1.0
+    lag_tau_s: 1.0
+
+  oil_temp_c:
+    description: "Oil temperature (NTC thermistor)"
+    unit: "°C"
+    noise_std: 1.0
+    drift_rate: 0.02
+    dropout_prob: 0.001
+    saturation_min: -40.0
+    saturation_max: 200.0
+    quantization_step: 0.5
+    lag_tau_s: 10.0
+
+  oil_press_kpa:
+    description: "Oil pressure (piezoresistive transducer)"
+    unit: "kPa"
+    noise_std: 5.0
+    drift_rate: 0.1
+    dropout_prob: 0.001
+    saturation_min: 0.0
+    saturation_max: 1000.0
+    quantization_step: 1.0
+    lag_tau_s: 0.1
+
+  coolant_temp_c:
+    description: "Coolant temperature (NTC thermistor)"
+    unit: "°C"
+    noise_std: 1.0
+    drift_rate: 0.02
+    dropout_prob: 0.001
+    saturation_min: -40.0
+    saturation_max: 200.0
+    quantization_step: 0.5
+    lag_tau_s: 15.0
+
+  fuel_press_kpa:
+    description: "Fuel pressure (piezoresistive transducer)"
+    unit: "kPa"
+    noise_std: 2.0
+    drift_rate: 0.05
+    dropout_prob: 0.001
+    saturation_min: 0.0
+    saturation_max: 500.0
+    quantization_step: 0.5
+    lag_tau_s: 0.1
+
+  bus_voltage_v:
+    description: "Electrical bus voltage"
+    unit: "V"
+    noise_std: 0.05
+    drift_rate: 0.0
+    dropout_prob: 0.0005
+    saturation_min: 0.0
+    saturation_max: 30.0
+    quantization_step: 0.01
+    lag_tau_s: 0.01
+
+  vib_rms_g:
+    description: "Vibration RMS acceleration (MEMS accelerometer)"
+    unit: "g"
+    noise_std: 0.01
+    drift_rate: 0.001
+    dropout_prob: 0.001
+    saturation_min: 0.0
+    saturation_max: 50.0
+    quantization_step: 0.005
+    lag_tau_s: 0.1

@@ -1,0 +1,87 @@
+# ============================================================
+# AEROTWIN — Reference Engine Configuration
+# Engine: Rotax 914-like turbocharged 4-cylinder, 4-stroke SI
+# Class: ~100 hp (74.6 kW)
+# STATUS: All parameters tagged [assumed] or [public_datasheet]
+# CALIBRATION: Must be replaced by HAL/DRDO test-bench data
+#              before operational use.
+# SWAPPABLE: Drop in a second YAML with the same keys for a
+#            different engine. No code changes required.
+# ============================================================
+
+meta:
+  engine_id: "rotax_914_like"
+  description: "Rotax 914-class turbocharged 4-cyl SI piston engine for MALE UAV"
+  displacement_cc: 1352          # [public_datasheet] Rotax 914 UL
+  cylinders: 4
+  strokes: 4
+  compression_ratio: 9.0         # [assumed] typical SI aero engine
+  bore_mm: 79.5                  # [public_datasheet] Rotax 914
+  stroke_mm: 61.0                # [public_datasheet] Rotax 914
+  firing_order: [1, 3, 4, 2]    # [assumed] typical 4-cyl
+
+power:
+  max_power_kw: 84.5             # [public_datasheet] 115 hp at 5800 RPM
+  max_rpm: 5800                  # [public_datasheet]
+  idle_rpm: 1400                 # [assumed]
+  max_continuous_rpm: 5500       # [public_datasheet]
+  max_torque_nm: 150             # [assumed] approx from power/rpm
+  specific_fuel_consumption_g_per_kwh: 276  # [public_datasheet] BSFC
+
+turbocharger:
+  type: "single_stage_centrifugal"
+  max_boost_kpa: 115             # [public_datasheet] absolute MAP at rated
+  critical_altitude_m: 4572     # [public_datasheet] 15000 ft
+  wastegate: "pneumatic_automatic"
+  turbo_efficiency_compressor: 0.72   # [assumed]
+  turbo_efficiency_turbine: 0.70      # [assumed]
+  turbo_inertia_kgm2: 1.5e-5         # [assumed]
+
+thermal:
+  cht_max_c: 150                 # [public_datasheet] max cylinder head temp
+  cht_normal_cruise_c: 110       # [assumed]
+  egt_max_c: 950                 # [public_datasheet]
+  egt_normal_cruise_c: 750       # [assumed]
+  oil_temp_max_c: 130            # [public_datasheet]
+  oil_temp_normal_c: 90          # [assumed]
+  coolant_temp_max_c: 120        # [assumed] liquid-cooled heads
+  cht_time_constant_s: 30.0      # [assumed] lumped thermal RC
+  egt_time_constant_s: 5.0       # [assumed]
+  oil_time_constant_s: 60.0      # [assumed]
+
+lubrication:
+  oil_press_min_kpa: 200         # [public_datasheet]
+  oil_press_normal_kpa: 400      # [assumed]
+  oil_press_max_kpa: 700         # [assumed]
+  oil_volume_liters: 3.0         # [assumed]
+
+fuel:
+  fuel_type: "AVGAS_100LL"
+  lhv_mj_per_kg: 43.5           # [public_datasheet] lower heating value
+  stoich_afr: 15.0               # [assumed] gasoline
+  lambda_target_cruise: 1.0      # [assumed] stoichiometric cruise
+  lambda_target_takeoff: 0.9     # [assumed] rich for cooling
+  fuel_density_kg_per_l: 0.72   # [public_datasheet] AVGAS
+
+friction:
+  fmep_bar_a: 0.8                # [assumed] friction IMEP coefficient at idle
+  fmep_bar_b: 0.00015             # [corrected] speed coefficient (bar per RPM); gives ~1.55 bar at 5000 RPM
+
+volumetric_efficiency:
+  ve_ref: 0.85                   # [assumed] naturally aspirated at peak torque RPM
+  ve_rpm_peak: 3500              # [assumed]
+  ve_rpm_exponent: 0.3           # [assumed] shape of VE curve
+
+propeller:
+  type: "constant_speed"         # selectable: fixed_pitch | constant_speed
+  diameter_m: 1.73               # [assumed] typical for ~100 hp class
+  pitch_m: 1.1                   # [assumed] effective pitch
+  blade_count: 3
+  cp_ref: 0.045                  # [assumed] power coefficient at design point
+  ct_ref: 0.085                  # [assumed] thrust coefficient
+  efficiency_max: 0.85           # [assumed]
+
+electrical:
+  alternator_max_a: 30           # [assumed]
+  bus_voltage_nominal_v: 14.0    # [assumed] 14V system
+  battery_capacity_ah: 20        # [assumed]

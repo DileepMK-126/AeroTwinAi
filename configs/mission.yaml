@@ -1,0 +1,97 @@
+# ============================================================
+# AEROTWIN — Mission Configuration
+# Defines flight profile parameters, risk thresholds,
+# alternates, and decision engine settings
+# ============================================================
+
+mission:
+  # Default flight profile for simulated missions
+  default_profile:
+    cruise_altitude_m: 4500       # MALE operational altitude
+    cruise_airspeed_mps: 55.0     # ~100 knots equivalent
+    loiter_airspeed_mps: 40.0
+    max_duration_h: 12.0          # typical MALE endurance
+    fuel_reserve_pct: 10.0        # minimum fuel reserve to land
+
+  # Flight phase durations for default profile (seconds)
+  phase_durations:
+    ground: 300
+    takeoff: 120
+    climb: 600
+    cruise: 1800
+    loiter: 28800    # 8 hours loiter
+    descent: 600
+    landing: 180
+
+  # ISA atmosphere baseline
+  atmosphere:
+    sea_level_temp_c: 15.0
+    sea_level_pressure_kpa: 101.325
+    lapse_rate_k_per_m: 0.0065
+
+# Risk thresholds for mission decision engine
+risk_thresholds:
+  p_mission_complete_min: 0.85   # below this → consider divert
+  p_mission_complete_critical: 0.6  # below this → RTB
+  p_mission_complete_emergency: 0.3  # below this → emergency land
+  rul_hours_warning: 5.0         # hours before predicted failure → warning
+  rul_hours_critical: 2.0        # hours → critical
+  rul_hours_emergency: 0.5       # hours → emergency
+
+# Alternate airfields / recovery options
+alternates:
+  - name: "Home Base"
+    lat: 13.0827
+    lon: 80.2707
+    distance_km: 0.0
+    type: "primary"
+  - name: "Alternate Alpha"
+    lat: 12.9716
+    lon: 77.5946
+    distance_km: 290.0
+    type: "divert"
+  - name: "Emergency Strip"
+    lat: 13.1000
+    lon: 80.1000
+    distance_km: 15.0
+    type: "emergency"
+
+# Engine-out glide parameters (for emergency decisions)
+engine_out:
+  glide_ratio: 8.0              # aircraft lift/drag ratio (assumed)
+  min_safe_altitude_m: 100.0    # minimum altitude for safe landing
+  decision_altitude_m: 500.0   # altitude at which emergency action must start
+
+# Decision engine rules
+decisions:
+  CONTINUE:
+    min_p_complete: 0.85
+    description: "Mission continues normally"
+  CONTINUE_DEGRADED:
+    min_p_complete: 0.6
+    max_p_complete: 0.85
+    description: "Reduce power/altitude, continue with caution"
+    power_reduction_pct: 15.0
+    altitude_reduction_m: 500.0
+  DIVERT:
+    min_p_complete: 0.3
+    max_p_complete: 0.6
+    description: "Proceed to nearest alternate immediately"
+  RETURN_TO_BASE:
+    max_p_complete: 0.45
+    rul_hours_remaining: 2.0
+    description: "Return to base, mission aborted"
+  EMERGENCY_LAND:
+    max_rul_hours: 0.5
+    description: "Declare emergency, land immediately"
+
+# Monte Carlo parameters for reliability calculation
+monte_carlo:
+  n_samples: 1000
+  seed: 42
+
+# Fleet configuration
+fleet:
+  max_engines: 16
+  maintenance_interval_h: 200   # [assumed] scheduled maintenance interval
+  pre_flight_go_threshold: 0.95 # minimum readiness score for dispatch

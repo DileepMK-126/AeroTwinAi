@@ -1,0 +1,163 @@
+# ============================================================
+# AEROTWIN — Model Registry Configuration
+# Lists all ML models, versions, input specs, and metrics.
+# Real trained .joblib pipelines loaded directly by ModelRegistry.
+# ============================================================
+
+models:
+  # ---- 1. ALFA Real UAV Engine Failure Classifier ---------------------
+  alfa_engine_failure_classifier:
+    name: "alfa_engine_failure_classifier"
+    description: "ExtraTrees / Logistic pipeline on Carnegie Mellon autonomous flight logs"
+    version: "1.0.0"
+    file: "alfa_uav/AeroTwin_Training/BEST_ENGINE_FAILURE_CLASSIFIER.joblib"
+    input_spec:
+      n_features: 60
+      dataset: "ALFA Autonomous UAV Flight Logs (CMU / SIH)"
+    output_spec:
+      classes: ["nominal", "engine_failure"]
+    metrics:
+      accuracy: 0.974
+      f1_score: 0.968
+      latency_ms: 1.45
+    status: "active"
+    fallback: "physics_fault_tree"
+
+  # ---- 2. Engine Journal Bearing Fault Classifier ----------------------
+  best_bearing_fault_classifier:
+    name: "best_bearing_fault_classifier"
+    description: "Vibration spectrogram classifier on physical journal bearing test rig"
+    version: "1.0.0"
+    file: "bearing/models/BEST_BEARING_FAULT_CLASSIFIER.joblib"
+    input_spec:
+      n_features: 340
+      dataset: "Engine Journal Bearings Test Rig (Case Western / NASA)"
+    output_spec:
+      classes: ["healthy", "faulty"]
+    metrics:
+      accuracy: 0.992
+      f1_score: 0.991
+      latency_ms: 2.10
+    status: "active"
+    fallback: "physics_fault_tree"
+
+  # ---- 3. Bearing Isolation Forest Anomaly Detector -------------------
+  bearing_isolation_forest:
+    name: "bearing_isolation_forest"
+    description: "Unsupervised Isolation Forest trained on healthy vibration baseline"
+    version: "1.0.0"
+    file: "bearing/models/HEALTHY_ONLY_ANOMALY_DETECTOR.joblib"
+    input_spec:
+      n_features: 340
+    output_spec:
+      classes: ["nominal", "anomaly"]
+    metrics:
+      f1_score: 0.985
+      contamination: 0.05
+      latency_ms: 1.85
+    status: "active"
+    fallback: "ewma_cusum"
+
+  # ---- 4. NASA C-MAPSS Turbofan RUL Prognosis Ensemble ----------------
+  cmapss_rul_ensemble:
+    name: "cmapss_rul_ensemble"
+    description: "Deep Gradient Boosting + Random Forest + ExtraTrees RUL ensemble"
+    version: "1.0.0"
+    file: "cmapss/FD001_improved_ensemble.joblib"
+    fallback_file: "cmapss/FD001_predictions.csv"
+    input_spec:
+      n_features: 24
+      dataset: "NASA C-MAPSS Commercial Modular Aero-Propulsion System (FD001-FD004)"
+    output_spec:
+      target: "Remaining Useful Life (RUL) in flight cycles"
+    metrics:
+      rmse_cycles: 11.4
+      nasa_score: 248.6
+      latency_ms: 3.20
+    status: "active"
+    fallback: "bayesian_degradation_filter"
+
+  # ---- 5. AeroTwin Diesel Piston Multi-Fault Classifier ----------------
+  aerotwin_diesel_piston_classifier:
+    name: "aerotwin_diesel_piston_classifier"
+    description: "14-Class acoustic & pressure harmonic ExtraTrees classifier"
+    version: "1.0.0"
+    file: "aerotwin_diesel_fault_model.joblib"
+    input_spec:
+      n_features: 60
+      dataset: "Aero Piston Dyno Bench (Rotax 914 class)"
+    output_spec:
+      n_classes: 14
+      classes: ["Normal", "DP", "fcomp1", "fcomp2", "fcomp3", "fcomp4", "fcomp5", "fcomp6", "fcomb1", "fcomb2", "fcomb3", "fcomb4", "fcomb5", "fcomb6"]
+    metrics:
+      accuracy_30dB: 0.994
+      accuracy_60dB: 1.000
+      macro_f1: 0.994
+      latency_ms: 2.80
+    status: "active"
+    fallback: "physics_fault_tree"
+
+  # ---- 6. PX4 UAV Propeller Aero-Structural Anomaly Classifier ---------
+  best_propeller_anomaly_classifier:
+    name: "best_propeller_anomaly_classifier"
+    description: "PX4 high-rate gyro & innovation variance structural fault detector"
+    version: "1.0.0"
+    file: "propeller/BEST_PROPELLER_ANOMALY_CLASSIFIER.joblib"
+    input_spec:
+      n_features: 7
+      dataset: "PX4 UAV Flight Dynamics Rig (data.zip)"
+    output_spec:
+      n_classes: 4
+      classes: ["nominal", "imbalanced_propeller", "severely_imbalanced", "cracked_propeller"]
+    metrics:
+      accuracy: 0.991
+      f1_score: 0.988
+      latency_ms: 1.15
+    status: "active"
+    fallback: "physics_fault_tree"
+
+  # ---- Level-A Detectors (No offline training required) ---------------
+  ewma_cusum:
+    name: "ewma_cusum"
+    description: "EWMA + CUSUM statistical change detector on normalized residuals"
+    version: "1.0.0"
+    file: null
+    status: "active"
+    params:
+      ewma_lambda: 0.2
+      cusum_k: 0.5
+      cusum_h: 5.0
+      false_alarm_rate: 0.001
+
+  physics_fault_tree:
+    name: "physics_fault_tree"
+    description: "Rule-based thermodynamic and mechanical fault tree from EKF residuals"
+    version: "1.0.0"
+    file: null
+    status: "active"
+
+  bayesian_degradation_filter:
+    name: "bayesian_degradation_filter"
+    description: "Bayesian recursive least squares linear degradation filter for RUL"
+    version: "1.0.0"
+    file: null
+    status: "active"
+
+# Loading priority (first available wins)
+loading_order:
+  detection:
+    - best_propeller_anomaly_classifier
+    - bearing_isolation_forest
+    - ewma_cusum
+  diagnosis:
+    - alfa_engine_failure_classifier
+    - best_bearing_fault_classifier
+    - aerotwin_diesel_piston_classifier
+    - physics_fault_tree
+  prognosis:
+    - cmapss_rul_ensemble
+    - bayesian_degradation_filter
+
+registry:
+  dir: "./data/models"
+  auto_reload: true

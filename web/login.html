@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEROTWIN — Secure Ops Authentication Portal</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+            }
+          },
+          boxShadow: {
+            'elevated': '0 25px 50px -12px rgba(79, 70, 229, 0.15), 0 10px 20px -5px rgba(0, 0, 0, 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#f4f6fc] text-slate-800 font-sans antialiased min-h-screen flex items-center justify-center p-4 selection:bg-brand-500 selection:text-white relative overflow-hidden">
+
+  <!-- Subtle background decorative mesh -->
+  <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-200/40 rounded-full blur-3xl pointer-events-none"></div>
+
+  <!-- Main Login / Signin Card -->
+  <div class="relative w-full max-w-md bg-white rounded-3xl p-8 shadow-elevated border border-slate-100/80 transition-all">
+    
+    <!-- App Logo & Title Header -->
+    <div class="text-center mb-6">
+      <div class="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-indigo-500 items-center justify-center shadow-lg shadow-brand-500/25 text-white font-extrabold text-2xl tracking-tight mb-3">
+        A
+      </div>
+      <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">
+        AEROTWIN Ops Control
+      </h1>
+      <p class="text-xs text-slate-400 mt-1">
+        AI-Enabled Real-Time Digital Twin for UAV Aero Piston Engines
+      </p>
+    </div>
+
+    <!-- Mode Selector Tabs (Sign In vs Sign Up) -->
+    <div class="flex bg-slate-100 p-1 rounded-2xl mb-6 border border-slate-200/70">
+      <button id="tabSignIn" onclick="switchAuthMode('signin')" class="flex-1 py-2 text-xs font-bold rounded-xl bg-white text-brand-700 shadow-sm transition">
+        Sign In
+      </button>
+      <button id="tabSignUp" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition">
+        Create Account
+      </button>
+    </div>
+
+    <!-- Quick Demo Preset Fill Button -->
+    <div class="mb-5">
+      <button onclick="fillDemoCredentials()" type="button" class="w-full py-2 px-3 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 active:scale-98">
+        <span>🔑</span>
+        <span>Quick-Fill Admin Credentials (Alex Chen)</span>
+      </button>
+    </div>
+
+    <!-- Error/Success Message Alert -->
+    <div id="alertBox" class="hidden mb-4 p-3 rounded-xl text-xs font-medium border flex items-center gap-2"></div>
+
+    <!-- Form -->
+    <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+      
+      <!-- Full Name (Sign Up only) -->
+      <div id="fieldFullName" class="hidden space-y-1">
+        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Full Name</label>
+        <input type="text" id="fullNameInput" placeholder="e.g. Flight Engineer Sarah" class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition" />
+      </div>
+
+      <!-- Role Selector (Sign Up only) -->
+      <div id="fieldRole" class="hidden space-y-1">
+        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Duty Role</label>
+        <select id="roleInput" class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition">
+          <option value="Flight Engineer">Flight Ops Engineer</option>
+          <option value="Mission Commander">Mission Commander</option>
+          <option value="UAV Test Pilot">UAV Flight Test Pilot</option>
+          <option value="Maintenance Specialist">Propulsion Maintenance Specialist</option>
+        </select>
+      </div>
+
+      <!-- Email / Username -->
+      <div class="space-y-1">
+        <label id="loginIdLabel" class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Email or Username</label>
+        <div class="relative">
+          <input type="text" id="loginIdInput" required placeholder="admin@aerotwin.ai" class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition font-medium" />
+        </div>
+      </div>
+
+      <!-- Username (Sign Up only) -->
+      <div id="fieldUsername" class="hidden space-y-1">
+        <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Callsign / Username</label>
+        <input type="text" id="usernameInput" placeholder="sarah_ops" class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition font-medium" />
+      </div>
+
+      <!-- Password -->
+      <div class="space-y-1">
+        <div class="flex justify-between items-center">
+          <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Password</label>
+          <span class="text-[11px] text-brand-600 hover:underline cursor-pointer" onclick="togglePasswordVisibility()">Show</span>
+        </div>
+        <input type="password" id="passwordInput" required placeholder="••••••••" class="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition font-mono" />
+      </div>
+
+      <!-- Remember Me -->
+      <div class="flex items-center justify-between text-xs pt-1">
+        <label class="flex items-center gap-2 cursor-pointer text-slate-600 font-medium">
+          <input type="checkbox" id="rememberMe" checked class="w-3.5 h-3.5 text-brand-600 rounded border-slate-300 focus:ring-brand-500" />
+          <span>Remember session</span>
+        </label>
+        <span class="text-slate-400 text-[11px]">DO-178C Advisory Proto</span>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" id="submitBtn" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md shadow-brand-500/20 transition active:scale-98 flex items-center justify-center gap-2">
+        <span id="btnText">Sign In to Ground Station</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+      </button>
+
+    </form>
+
+    <!-- Footer info -->
+    <div class="text-center mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+      <span>Logged in session connects directly to local SQLite database</span>
+    </div>
+
+  </div>
+
+  <script>
+    let mode = 'signin';
+
+    function switchAuthMode(newMode) {
+      mode = newMode;
+      const tabSignIn = document.getElementById('tabSignIn');
+      const tabSignUp = document.getElementById('tabSignUp');
+      const fieldFullName = document.getElementById('fieldFullName');
+      const fieldRole = document.getElementById('fieldRole');
+      const fieldUsername = document.getElementById('fieldUsername');
+      const loginIdLabel = document.getElementById('loginIdLabel');
+      const btnText = document.getElementById('btnText');
+      const alertBox = document.getElementById('alertBox');
+      alertBox.classList.add('hidden');
+
+      if (mode === 'signin') {
+        tabSignIn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-brand-700 shadow-sm transition';
+        tabSignUp.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition';
+        fieldFullName.classList.add('hidden');
+        fieldRole.classList.add('hidden');
+        fieldUsername.classList.add('hidden');
+        loginIdLabel.innerText = 'Email or Username';
+        btnText.innerText = 'Sign In to Ground Station';
+      } else {
+        tabSignUp.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-white text-brand-700 shadow-sm transition';
+        tabSignIn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-slate-500 hover:text-slate-800 transition';
+        fieldFullName.classList.remove('hidden');
+        fieldRole.classList.remove('hidden');
+        fieldUsername.classList.remove('hidden');
+        loginIdLabel.innerText = 'Email Address';
+        btnText.innerText = 'Create Account & Enter';
+      }
+    }
+
+    function fillDemoCredentials() {
+      switchAuthMode('signin');
+      document.getElementById('loginIdInput').value = 'admin@aerotwin.ai';
+      document.getElementById('passwordInput').value = 'admin123';
+    }
+
+    function togglePasswordVisibility() {
+      const pwd = document.getElementById('passwordInput');
+      pwd.type = pwd.type === 'password' ? 'text' : 'password';
+    }
+
+    function showAlert(msg, isError = true) {
+      const b = document.getElementById('alertBox');
+      b.className = isError 
+        ? 'mb-4 p-3 rounded-xl text-xs font-medium border bg-rose-50 text-rose-700 border-rose-200' 
+        : 'mb-4 p-3 rounded-xl text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200';
+      b.innerText = msg;
+      b.classList.remove('hidden');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+
+      try {
+        if (mode === 'signin') {
+          const loginId = document.getElementById('loginIdInput').value;
+          const password = document.getElementById('passwordInput').value;
+
+          const res = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username_or_email: loginId,
+              password: password
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            showAlert(data.detail || 'Login failed. Please check credentials.');
+            submitBtn.disabled = false;
+            return;
+          }
+
+          localStorage.setItem('aerotwin_auth_token', data.token);
+          localStorage.setItem('aerotwin_user', JSON.stringify(data.user));
+          showAlert('Login successful! Redirecting to dashboard...', false);
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 600);
+
+        } else {
+          const email = document.getElementById('loginIdInput').value;
+          const username = document.getElementById('usernameInput').value || email.split('@')[0];
+          const fullName = document.getElementById('fullNameInput').value;
+          const role = document.getElementById('roleInput').value;
+          const password = document.getElementById('passwordInput').value;
+
+          const res = await fetch('/api/v1/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: username,
+              email: email,
+              password: password,
+              full_name: fullName,
+              role: role
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            showAlert(data.detail || 'Registration failed.');
+            submitBtn.disabled = false;
+            return;
+          }
+
+          localStorage.setItem('aerotwin_auth_token', data.token);
+          localStorage.setItem('aerotwin_user', JSON.stringify(data.user));
+          showAlert('Account created! Welcome to AeroTwin...', false);
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 600);
+        }
+      } catch (err) {
+        showAlert('Network or server error connecting to backend.');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
