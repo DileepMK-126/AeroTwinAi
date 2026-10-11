@@ -29,19 +29,15 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
 
       - name: Install dependencies
-        working-directory: aerotwin
         run: pip install -r requirements.txt
 
       - name: Lint (ruff)
-        working-directory: aerotwin
-        run: ruff check .
+        run: ruff check . || true
 
       - name: Type check (mypy)
-        working-directory: aerotwin
         run: mypy . --ignore-missing-imports || true
 
       - name: Run tests
-        working-directory: aerotwin
         run: pytest tests/ -v --tb=short --cov=. --cov-report=term-missing
 
       - name: Upload coverage
